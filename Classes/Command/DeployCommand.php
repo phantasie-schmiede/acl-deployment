@@ -325,7 +325,7 @@ class DeployCommand extends Command
 
             if (RecordType::BackendGroup === $recordType && !empty($this->pageTreeAccessMapping)) {
                 array_walk($this->pageTreeAccessMapping, function(&$value) {
-                    $value = $this->mapping[RecordType::BackendGroup->getTable()][$value];
+                    $value = (int)$this->mapping[RecordType::BackendGroup->getTable()][$value];
                 });
                 $this->permissionService->setPermissionsForAllPages($this->pageTreeAccessMapping, $this->io);
             }

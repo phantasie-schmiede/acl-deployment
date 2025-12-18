@@ -12,17 +12,17 @@ namespace PSBits\AclDeployment\Service;
 
 use Doctrine\DBAL\Exception as DoctrineException;
 use Exception;
-use PDO;
-use PSBits\Foundation\Utility\TypoScript\TypoScriptUtility;
 use PSBits\AclDeployment\Data\ExtensionInformation;
+use PSBits\Foundation\Utility\TypoScript\TypoScriptUtility;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\DataHandling\PagePermissionAssembler;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
-use TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser;
 use TYPO3\CMS\Core\TypoScript\TypoScriptService;
+use TYPO3\CMS\Core\TypoScript\TypoScriptStringFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use function count;
 
@@ -78,7 +78,10 @@ class PermissionService
                     $queryBuilder->expr()
                         ->eq(
                             'uid',
-                            $queryBuilder->createNamedParameter($siteConfiguration->getRootPageId(), PDO::PARAM_INT)
+                            $queryBuilder->createNamedParameter(
+                                $siteConfiguration->getRootPageId(),
+                                Connection::PARAM_INT
+                            )
                         )
                 )
                 ->executeQuery()
@@ -122,11 +125,11 @@ class PermissionService
                 $queryBuilder->expr()
                     ->and(
                         $queryBuilder->expr()
-                            ->eq('pid', $queryBuilder->createNamedParameter($uid, PDO::PARAM_INT)),
+                            ->eq('pid', $queryBuilder->createNamedParameter($uid, Connection::PARAM_INT)),
                         $queryBuilder->expr()
                             ->eq(
                                 'deleted',
-                                $queryBuilder->createNamedParameter(0, PDO::PARAM_INT)
+                                $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)
                             )
                     )
             );
@@ -193,7 +196,7 @@ class PermissionService
             $queryBuilder->update(self::TABLE_NAME)
                 ->where(
                     $queryBuilder->expr()
-                        ->eq('uid', $queryBuilder->createNamedParameter($page['uid'], PDO::PARAM_INT))
+                        ->eq('uid', $queryBuilder->createNamedParameter($page['uid'], Connection::PARAM_INT))
                 )
                 ->set('perms_everybody', $permissions['perms_everybody'])
                 ->set('perms_group', $permissions['perms_group'])
@@ -212,10 +215,14 @@ class PermissionService
 
     private function updateTSconfigForPage(array $page, ?int $permsGroupId = null): void
     {
-        /** @var TypoScriptParser $typoScriptParser */
-        $typoScriptParser = GeneralUtility::makeInstance(TypoScriptParser::class);
-        $typoScriptParser->parse($page['TSconfig']);
-        $tsconfig = $this->typoScriptService->convertTypoScriptArrayToPlainArray($typoScriptParser->setup);
+        $parser = GeneralUtility::makeInstance(TypoScriptStringFactory::class);
+        $tsconfig = $this->typoScriptService->convertTypoScriptArrayToPlainArray(
+            $parser->parseFromStringWithIncludes(
+                'page_' . $page['uid'],
+                $page['TSconfig'] ?? ''
+            )
+                ->toArray()
+        );
 
         if (null !== $permsGroupId) {
             $tsconfig['TCEMAIN']['permissions']['groupid'] = [
@@ -236,7 +243,7 @@ class PermissionService
         $queryBuilder->update(self::TABLE_NAME)
             ->where(
                 $queryBuilder->expr()
-                    ->eq('uid', $queryBuilder->createNamedParameter($page['uid'], PDO::PARAM_INT))
+                    ->eq('uid', $queryBuilder->createNamedParameter($page['uid'], Connection::PARAM_INT))
             )
             ->set('TSconfig', $page['TSconfig']);
         $queryBuilder->executeStatement();
