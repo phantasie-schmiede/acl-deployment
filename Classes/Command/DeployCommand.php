@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /*
@@ -24,6 +25,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 use function in_array;
 use function is_array;
 use function is_string;
@@ -127,9 +129,9 @@ class DeployCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->io = new SymfonyStyle($input, $output);
-        $fileName = GeneralUtility::getFileAbsFileName($input->getArgument('file'));
-        $this->dryRun = (bool)$input->getOption('dry-run');
+        $this->io                     = new SymfonyStyle($input, $output);
+        $fileName                     = GeneralUtility::getFileAbsFileName($input->getArgument('file'));
+        $this->dryRun                 = (bool)$input->getOption('dry-run');
         $this->removeAbandonedRecords = (bool)$input->getOption('remove');
 
         $configuration = $this->decodeConfigurationFile($fileName);
@@ -154,7 +156,7 @@ class DeployCommand extends Command
      */
     private function countAbandonedRecords(string ...$existingIdentifiers): int
     {
-        $table = $this->currentRecordType->getTable();
+        $table        = $this->currentRecordType->getTable();
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()
@@ -191,14 +193,14 @@ class DeployCommand extends Command
     private function deploy(array $configuration, RecordType $recordType): void
     {
         $this->currentRecordType = $recordType;
-        $createdRecords = 0;
-        $updatedRecords = 0;
+        $createdRecords          = 0;
+        $updatedRecords          = 0;
 
         // The default settings and variables have to be extracted before further processing of the array!
-        $defaultSettings = $this->extractValue($configuration, '_default');
-        $variables = $this->extractValue($configuration, '_variables');
-        $identifiers = array_keys($configuration);
-        $existingRecords = $this->getExistingRecords($identifiers);
+        $defaultSettings     = $this->extractValue($configuration, '_default');
+        $variables           = $this->extractValue($configuration, '_variables');
+        $identifiers         = array_keys($configuration);
+        $existingRecords     = $this->getExistingRecords($identifiers);
         $existingIdentifiers = array_map(
             'strtolower',
             array_column($existingRecords, $recordType->getIdentifierField())
@@ -256,12 +258,13 @@ class DeployCommand extends Command
             }
 
             $settings[$recordType->getIdentifierField()] = $identifier;
-            $settings['tstamp'] = time();
+            $settings['tstamp']                          = time();
 
             switch ($recordType) {
                 case RecordType::BackendGroup:
                 case RecordType::FrontendGroup:
                     $this->prepareSubgroups($identifier, $settings, $subgroupReferences);
+
                     break;
                 case RecordType::BackendUser:
                 case RecordType::FrontendUser:
@@ -270,6 +273,7 @@ class DeployCommand extends Command
                         $recordType->getGroupTable(),
                         $settings
                     );
+
                     break;
                 default:
             }
@@ -376,8 +380,8 @@ class DeployCommand extends Command
     private function getExistingRecords(array $identifiers): array
     {
         $identifierField = $this->currentRecordType->getIdentifierField();
-        $table = $this->currentRecordType->getTable();
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+        $table           = $this->currentRecordType->getTable();
+        $queryBuilder    = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()
             ->removeAll();
@@ -451,7 +455,7 @@ class DeployCommand extends Command
                 ->getConnectionForTable($table);
             $connection->update(
                 $table,
-                [$this->currentRecordType->getGroupField() => implode(',', $subgroupReference)],
+                [$this->currentRecordType->getGroupField()      => implode(',', $subgroupReference)],
                 [$this->currentRecordType->getIdentifierField() => $identifier]
             );
         }
@@ -477,7 +481,7 @@ class DeployCommand extends Command
 
     private function softDeleteAbandonedRecords(string ...$existingIdentifiers): int
     {
-        $table = $this->currentRecordType->getTable();
+        $table        = $this->currentRecordType->getTable();
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()
