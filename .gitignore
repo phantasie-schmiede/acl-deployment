@@ -1,5 +1,7 @@
-.Build/
-.idea/
-Build/testing-docker/.env
-composer.json.testing
-composer.lock
+/.Build/
+/.idea/*
+!/.idea/codeStyles/
+!/.idea/inspectionProfiles/
+/.php-cs-fixer.cache
+/Build/Quality/.phpstan/
+/composer.lock
