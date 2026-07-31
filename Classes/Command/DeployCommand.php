@@ -81,11 +81,19 @@ use function is_string;
 class DeployCommand extends Command
 {
     protected RecordType   $currentRecordType;
-    protected bool         $dryRun                 = false;
+    protected bool         $dryRun = false;
     protected SymfonyStyle $io;
-    protected array        $mapping                = [];
-    protected array        $pageTreeAccessMapping  = [];
-    protected bool         $removeAbandonedRecords = false;
+
+    /**
+     * @var array<string, array<string, int|string>>
+     */
+    protected array $mapping = [];
+
+    /**
+     * @var array<int, int|string>
+     */
+    protected array $pageTreeAccessMapping  = [];
+    protected bool  $removeAbandonedRecords = false;
 
     public function __construct(
         protected readonly PermissionService $permissionService,
@@ -166,6 +174,7 @@ class DeployCommand extends Command
     }
 
     /**
+     * @return array<string, mixed>
      * @throws JsonException
      */
     private function decodeConfigurationFile(string $fileName): array
@@ -174,6 +183,9 @@ class DeployCommand extends Command
     }
 
     /**
+     * @param array<string, mixed> $configuration
+     * @param RecordType           $recordType
+     *
      * @throws Exception
      */
     private function deploy(array $configuration, RecordType $recordType): void
@@ -206,13 +218,13 @@ class DeployCommand extends Command
             }
         }
 
+        $subgroupReferences = [];
+
         if (in_array($recordType, [
             RecordType::BackendGroup,
             RecordType::FileMount,
             RecordType::FrontendGroup,
         ], true)) {
-            $subgroupReferences = [];
-
             foreach ($existingRecords as $existingRecord) {
                 $this->mapping[$recordType->getTable()][$existingRecord[$recordType->getIdentifierField(
                 )]] = $existingRecord['uid'];
@@ -298,9 +310,7 @@ class DeployCommand extends Command
                         RecordType::FileMount,
                         RecordType::FrontendGroup,
                     ], true)) {
-                        $this->mapping[$recordType->getTable()][$identifier] = $connection->lastInsertId(
-                            $recordType->getTable()
-                        );
+                        $this->mapping[$recordType->getTable()][$identifier] = $connection->lastInsertId();
                     }
                 }
 
@@ -339,6 +349,11 @@ class DeployCommand extends Command
         }
     }
 
+    /**
+     * @param array<string, mixed> $configuration
+     *
+     * @return array<int|string, mixed>
+     */
     private function extractValue(array &$configuration, string $key): array
     {
         if (isset($configuration[$key])) {
@@ -353,6 +368,9 @@ class DeployCommand extends Command
     }
 
     /**
+     * @param string[] $identifiers
+     *
+     * @return array<int, array<string, mixed>>
      * @throws Exception
      */
     private function getExistingRecords(array $identifiers): array
@@ -378,6 +396,9 @@ class DeployCommand extends Command
     }
 
     /**
+     * @param array<string, mixed> $configuration
+     *
+     * @return array<string, mixed>
      * @throws JsonException
      */
     private function importConfigurationFiles(array $configuration): array
@@ -394,6 +415,10 @@ class DeployCommand extends Command
         );
     }
 
+    /**
+     * @param array<string, mixed> $settings
+     * @param array<string, mixed> $subgroupReferences
+     */
     private function prepareSubgroups(string $identifier, array &$settings, array &$subgroupReferences): void
     {
         $groupField = $this->currentRecordType->getGroupField();
@@ -404,6 +429,10 @@ class DeployCommand extends Command
         }
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $existingRecords
+     * @param array<string, mixed>             $subgroupReferences
+     */
     private function processBackendSubgroups(array $existingRecords, array $subgroupReferences): void
     {
         $table = $this->currentRecordType->getTable();
@@ -429,6 +458,10 @@ class DeployCommand extends Command
     }
 
     // This converts the identifiers to their respective UIDs.
+
+    /**
+     * @param array<string, mixed> $settings
+     */
     private function processRelations(string $relationField, string $relationTable, array &$settings): void
     {
         if (isset($settings[$relationField]) && is_array($settings[$relationField])) {

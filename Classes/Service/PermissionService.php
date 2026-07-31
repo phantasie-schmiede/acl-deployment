@@ -60,6 +60,8 @@ class PermissionService
     }
 
     /**
+     * @param array<int, int> $pageTreeAccessMapping
+     *
      * @throws DoctrineException
      * @throws Exception
      */
@@ -113,6 +115,7 @@ class PermissionService
     }
 
     /**
+     * @return array<int, array<string, mixed>>
      * @throws DoctrineException
      */
     protected function findAllSubpages(int $uid): array
@@ -148,6 +151,9 @@ class PermissionService
     }
 
     /**
+     * @param array<int, array<string, mixed>> $pages
+     * @param array<int, int>                  $pageTreeAccessMapping
+     *
      * @throws DoctrineException
      */
     protected function setPermissionsRecursively(
@@ -213,6 +219,9 @@ class PermissionService
         return $setParentShowForEverybody ?? false;
     }
 
+    /**
+     * @param array<string, mixed> $page
+     */
     private function updateTSconfigForPage(array $page, ?int $permsGroupId = null): void
     {
         $parser = GeneralUtility::makeInstance(TypoScriptStringFactory::class);

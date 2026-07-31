@@ -173,6 +173,8 @@ class ExportCommand extends Command
     /**
      * Adds the information which page is accessible by which backend group to the configuration.
      *
+     * @param array<string, mixed> $configuration
+     *
      * @throws Exception
      */
     private function exportPageTreeAccess(array &$configuration): void
@@ -213,6 +215,10 @@ class ExportCommand extends Command
     }
 
     /**
+     * @param array<string, mixed>                     $configuration
+     * @param array<string, array<int|string, string>> $mapping
+     * @param-out array<string, array<mixed>>          $mapping
+     *
      * @throws Exception
      */
     private function exportToConfiguration(array &$configuration, array &$mapping, RecordType $recordType): void
@@ -293,6 +299,8 @@ class ExportCommand extends Command
     }
 
     /**
+     * @param array<string, mixed> $configuration
+     *
      * @throws JsonException
      */
     private function exportToFile(array $configuration, string $fileName): void
@@ -303,6 +311,10 @@ class ExportCommand extends Command
         GeneralUtility::writeFile($file, $fileContent);
     }
 
+    /**
+     * @param array<int|string, string> $tableMapping
+     * @param array<string, mixed>      $record
+     */
     private function replaceRelationIdentifier(array $tableMapping, array &$record, string $relationField): void
     {
         if (empty($record[$relationField])) {
