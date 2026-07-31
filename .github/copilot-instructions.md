@@ -4,8 +4,7 @@ If you haven't already, please read the general agent instructions in `../AGENTS
 
 ## Repository purpose
 
-- TYPO3 v13 extension (`type: typo3-cms-extension`) providing page templates, Fluid ViewHelpers, TypoScript setup, and
-  Content Blocks.
+- TYPO3 v13 extension (`type: typo3-cms-extension`) that provides versioning and deployment of users, user groups and their privileges.
 - PHP namespace: `PSBits\\AclDeployment\\`.
 
 ## Key locations
