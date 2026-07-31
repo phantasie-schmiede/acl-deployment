@@ -12,7 +12,7 @@ declare(strict_types=1);
  * with this source code in the file LICENSE.
  */
 
-namespace PSBits\Templates\PhpCsFixer\Fixer;
+namespace PSBits\AclDeployment\PhpCsFixer\Fixer;
 
 use PhpCsFixer\AbstractFixer;
 use PhpCsFixer\Fixer\ConfigurableFixerInterface;

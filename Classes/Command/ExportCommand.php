@@ -134,6 +134,7 @@ class ExportCommand extends Command
         'uc',
         'uid',
     ];
+
     protected SymfonyStyle $io;
 
     protected function configure(): void

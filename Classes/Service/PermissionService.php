@@ -47,6 +47,7 @@ class PermissionService
         'TSconfig',
     ];
     protected const string TABLE_NAME = 'pages';
+
     protected PagePermissionAssembler $pagePermissionAssembler;
     protected int                     $pagesCounter = 0;
 
