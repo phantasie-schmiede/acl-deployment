@@ -69,7 +69,7 @@
         ],
         "qa": [
             "@fix:all",
-            "@lint:all",
+            "@lint:all"
         ],
         "validate:composer": "composer validate --no-check-publish"
     },
