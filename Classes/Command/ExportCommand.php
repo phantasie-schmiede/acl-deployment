@@ -210,7 +210,9 @@ class ExportCommand extends Command
         }
 
         foreach ($records as $record) {
-            if (0 === $groupMap[$record['pid']] || $groupMap[$record['pid']] !== $groupMap[$record['uid']]) {
+            $parentGroupTitle = $groupMap[$record['pid']] ?? null;
+
+            if (null === $parentGroupTitle || $parentGroupTitle !== $groupMap[$record['uid']]) {
                 $configuration[RecordType::BackendGroup->getTable(
                 )][$record['title']][PermissionService::PERMISSION_KEY][] = $record['uid'];
             }

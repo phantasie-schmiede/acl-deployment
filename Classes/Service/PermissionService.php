@@ -68,7 +68,7 @@ class PermissionService
      * @throws DoctrineException
      * @throws Exception
      */
-    public function setPermissionsForAllPages(array $pageTreeAccessMapping, SymfonyStyle $io = null): void
+    public function setPermissionsForAllPages(array $pageTreeAccessMapping, ?SymfonyStyle $io = null): void
     {
         $queryBuilder       = $this->createQueryBuilder();
         $this->pagesCounter = 0;
@@ -162,7 +162,7 @@ class PermissionService
     protected function setPermissionsRecursively(
         array $pages,
         array $pageTreeAccessMapping,
-        int   $parentPageGroupId = null,
+        ?int  $parentPageGroupId = null,
     ): bool {
         foreach ($pages as $page) {
             $permissions = $this->pagePermissionAssembler->applyDefaults(

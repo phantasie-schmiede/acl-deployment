@@ -1,0 +1,10 @@
+{
+    "be_groups": {
+        "Split group two": {
+            "description": "from file two"
+        }
+    },
+    "fe_groups": {
+        "Split fe group": {}
+    }
+}

@@ -407,16 +407,15 @@ class DeployCommand extends Command
      */
     private function importConfigurationFiles(array $configuration): array
     {
-        $additionalConfigurations = [];
-
         foreach ($configuration['files'] as $fileName) {
-            $additionalConfigurations[] = $this->decodeConfigurationFile(GeneralUtility::getFileAbsFileName($fileName));
+            $additionalConfiguration = $this->decodeConfigurationFile(GeneralUtility::getFileAbsFileName($fileName));
+
+            foreach ($additionalConfiguration as $tableName => $records) {
+                $configuration[$tableName] = array_merge($configuration[$tableName] ?? [], $records);
+            }
         }
 
-        return array_merge(
-            $configuration,
-            ...$additionalConfigurations
-        );
+        return $configuration;
     }
 
     /**
