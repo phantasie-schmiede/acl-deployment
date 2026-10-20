@@ -1,10 +1,10 @@
 #!/usr/bin/env sh
 #
-# Run the unit + functional suites with coverage, enforce the per-suite
-# coverage baseline and write clover/cobertura/html reports.
+# Run each present test suite (Build/Testing/*.xml) with coverage, enforce the
+# per-suite coverage baseline and write clover/cobertura/html reports.
 #
 # Usage:
-#   sh Build/Scripts/runCoverage.sh [--update-baseline]
+#   sh Build/Testing/Scripts/runCoverage.sh [--update-baseline]
 #
 #   --update-baseline  Rewrite the baseline file with the measured values
 #                      instead of checking it (requires a coverage driver).
@@ -30,7 +30,7 @@
 set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 . "$SCRIPT_DIR/console.sh"
 
@@ -185,8 +185,15 @@ run_suite() {
     fi
 }
 
-run_suite "unit" "Build/Testing/UnitTests.xml"
-run_suite "functional" "Build/Testing/FunctionalTests.xml"
+# Run only the suites whose configuration exists, so unit-only repositories
+# (no Build/Testing/FunctionalTests.xml) share this script unchanged.
+if [ -f Build/Testing/UnitTests.xml ]; then
+    run_suite "unit" "Build/Testing/UnitTests.xml"
+fi
+
+if [ -f Build/Testing/FunctionalTests.xml ]; then
+    run_suite "functional" "Build/Testing/FunctionalTests.xml"
+fi
 
 if [ "$FAILED" -ne 0 ]; then
     banner red "Coverage baseline violated"

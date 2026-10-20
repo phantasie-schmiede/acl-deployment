@@ -3,7 +3,7 @@
 # Run the full test matrix (unit + functional) against a single TYPO3 core version.
 #
 # Usage:
-#   sh Build/Scripts/runTests.sh <core-version> [--lowest] [--db sqlite|mysql|postgres]
+#   sh Build/Testing/Scripts/runTests.sh <core-version> [--lowest] [--db sqlite|mysql|postgres]
 #
 #   <core-version>   Core constraint to test against: 13.4 or 14.3.
 #   --lowest         Resolve the lowest allowed dependency versions
@@ -36,7 +36,7 @@
 set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 . "$SCRIPT_DIR/console.sh"
 

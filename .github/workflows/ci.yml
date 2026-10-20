@@ -106,7 +106,7 @@ jobs:
         # composer-matrix.json, so tracked files stay unmodified, and exports
         # COMPOSER_NO_SECURITY_BLOCKING (every supported core major currently
         # carries an open Packagist advisory; reporting happens in the qa job).
-        run: sh Build/Scripts/runTests.sh ${{ matrix.typo3 }} ${{ matrix.lowest && '--lowest' || '' }}
+        run: sh Build/Testing/Scripts/runTests.sh ${{ matrix.typo3 }} ${{ matrix.lowest && '--lowest' || '' }}
 
   coverage:
     name: 'Code coverage (TYPO3 13.4 / PHP 8.4)'
@@ -143,7 +143,7 @@ jobs:
       - name: Run coverage
         # Enforces the per-suite baseline from Build/Quality/coverage-baseline.json
         # and writes clover/cobertura/html reports to .Build/coverage/.
-        run: sh Build/Scripts/runCoverage.sh
+        run: sh Build/Testing/Scripts/runCoverage.sh
 
       - name: Upload coverage reports
         if: always()
