@@ -4,7 +4,6 @@
 !/.idea/inspectionProfiles/
 /.php-cs-fixer.cache
 /Build/Quality/.phpstan/
-/Build/Testing/Docker/build-ca/
 /composer-matrix.json
 /composer-matrix.lock
 /composer.lock
