@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /*
@@ -55,7 +56,7 @@ enum RecordType: string
         };
     }
 
-    public function getIdentifierField(): ?string
+    public function getIdentifierField(): string
     {
         return match ($this) {
             self::BackendGroup, self::FileMount, self::FrontendGroup => 'title',

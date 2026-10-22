@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /*
@@ -24,6 +25,7 @@ use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\TypoScript\TypoScriptService;
 use TYPO3\CMS\Core\TypoScript\TypoScriptStringFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 use function count;
 
 /**
@@ -44,7 +46,8 @@ class PermissionService
         'perms_userid',
         'TSconfig',
     ];
-    protected const string TABLE_NAME      = 'pages';
+    protected const string TABLE_NAME = 'pages';
+
     protected PagePermissionAssembler $pagePermissionAssembler;
     protected int                     $pagesCounter = 0;
 
@@ -60,12 +63,14 @@ class PermissionService
     }
 
     /**
+     * @param array<int, int> $pageTreeAccessMapping
+     *
      * @throws DoctrineException
      * @throws Exception
      */
-    public function setPermissionsForAllPages(array $pageTreeAccessMapping, SymfonyStyle $io = null): void
+    public function setPermissionsForAllPages(array $pageTreeAccessMapping, ?SymfonyStyle $io = null): void
     {
-        $queryBuilder = $this->createQueryBuilder();
+        $queryBuilder       = $this->createQueryBuilder();
         $this->pagesCounter = 0;
 
         // Get first array key of $pageTreeAccessMapping
@@ -113,6 +118,7 @@ class PermissionService
     }
 
     /**
+     * @return array<int, array<string, mixed>>
      * @throws DoctrineException
      */
     protected function findAllSubpages(int $uid): array
@@ -148,18 +154,23 @@ class PermissionService
     }
 
     /**
+     * @param array<int, array<string, mixed>> $pages
+     * @param array<int, int>                  $pageTreeAccessMapping
+     *
      * @throws DoctrineException
      */
     protected function setPermissionsRecursively(
         array $pages,
         array $pageTreeAccessMapping,
-        int   $parentPageGroupId = null,
+        ?int  $parentPageGroupId = null,
     ): bool {
         foreach ($pages as $page) {
-            $permissions = $this->pagePermissionAssembler->applyDefaults([],
+            $permissions = $this->pagePermissionAssembler->applyDefaults(
+                [],
                 $page['uid'],
                 $page['perms_userid'],
-                $page['perms_groupid']);
+                $page['perms_groupid']
+            );
 
             if (isset($pageTreeAccessMapping[$page['uid']])) {
                 $permissions['perms_groupid'] = $pageTreeAccessMapping[$page['uid']];
@@ -213,9 +224,12 @@ class PermissionService
         return $setParentShowForEverybody ?? false;
     }
 
+    /**
+     * @param array<string, mixed> $page
+     */
     private function updateTSconfigForPage(array $page, ?int $permsGroupId = null): void
     {
-        $parser = GeneralUtility::makeInstance(TypoScriptStringFactory::class);
+        $parser   = GeneralUtility::makeInstance(TypoScriptStringFactory::class);
         $tsconfig = $this->typoScriptService->convertTypoScriptArrayToPlainArray(
             $parser->parseFromStringWithIncludes(
                 'page_' . $page['uid'],
@@ -227,7 +241,7 @@ class PermissionService
         if (null !== $permsGroupId) {
             $tsconfig['TCEMAIN']['permissions']['groupid'] = [
                 TypoScriptUtility::TYPO_SCRIPT_KEYS['COMMENT'] => 'added by ' . $this->extensionInformation->getExtensionKey(
-                    ),
+                ),
                 $permsGroupId,
             ];
         } elseif (isset($tsconfig['TCEMAIN']['permissions']['groupid'])) {

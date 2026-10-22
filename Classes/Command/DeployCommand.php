@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /*
@@ -24,6 +25,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 use function in_array;
 use function is_array;
 use function is_string;
@@ -81,11 +83,19 @@ use function is_string;
 class DeployCommand extends Command
 {
     protected RecordType   $currentRecordType;
-    protected bool         $dryRun                 = false;
+    protected bool         $dryRun = false;
     protected SymfonyStyle $io;
-    protected array        $mapping                = [];
-    protected array        $pageTreeAccessMapping  = [];
-    protected bool         $removeAbandonedRecords = false;
+
+    /**
+     * @var array<string, array<string, int|string>>
+     */
+    protected array $mapping = [];
+
+    /**
+     * @var array<int, int|string>
+     */
+    protected array $pageTreeAccessMapping  = [];
+    protected bool  $removeAbandonedRecords = false;
 
     public function __construct(
         protected readonly PermissionService $permissionService,
@@ -119,9 +129,9 @@ class DeployCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->io = new SymfonyStyle($input, $output);
-        $fileName = GeneralUtility::getFileAbsFileName($input->getArgument('file'));
-        $this->dryRun = (bool)$input->getOption('dry-run');
+        $this->io                     = new SymfonyStyle($input, $output);
+        $fileName                     = GeneralUtility::getFileAbsFileName($input->getArgument('file'));
+        $this->dryRun                 = (bool)$input->getOption('dry-run');
         $this->removeAbandonedRecords = (bool)$input->getOption('remove');
 
         $configuration = $this->decodeConfigurationFile($fileName);
@@ -146,7 +156,7 @@ class DeployCommand extends Command
      */
     private function countAbandonedRecords(string ...$existingIdentifiers): int
     {
-        $table = $this->currentRecordType->getTable();
+        $table        = $this->currentRecordType->getTable();
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()
@@ -166,6 +176,7 @@ class DeployCommand extends Command
     }
 
     /**
+     * @return array<string, mixed>
      * @throws JsonException
      */
     private function decodeConfigurationFile(string $fileName): array
@@ -174,19 +185,22 @@ class DeployCommand extends Command
     }
 
     /**
+     * @param array<string, mixed> $configuration
+     * @param RecordType           $recordType
+     *
      * @throws Exception
      */
     private function deploy(array $configuration, RecordType $recordType): void
     {
         $this->currentRecordType = $recordType;
-        $createdRecords = 0;
-        $updatedRecords = 0;
+        $createdRecords          = 0;
+        $updatedRecords          = 0;
 
         // The default settings and variables have to be extracted before further processing of the array!
-        $defaultSettings = $this->extractValue($configuration, '_default');
-        $variables = $this->extractValue($configuration, '_variables');
-        $identifiers = array_keys($configuration);
-        $existingRecords = $this->getExistingRecords($identifiers);
+        $defaultSettings     = $this->extractValue($configuration, '_default');
+        $variables           = $this->extractValue($configuration, '_variables');
+        $identifiers         = array_keys($configuration);
+        $existingRecords     = $this->getExistingRecords($identifiers);
         $existingIdentifiers = array_map(
             'strtolower',
             array_column($existingRecords, $recordType->getIdentifierField())
@@ -206,13 +220,13 @@ class DeployCommand extends Command
             }
         }
 
+        $subgroupReferences = [];
+
         if (in_array($recordType, [
             RecordType::BackendGroup,
             RecordType::FileMount,
             RecordType::FrontendGroup,
         ], true)) {
-            $subgroupReferences = [];
-
             foreach ($existingRecords as $existingRecord) {
                 $this->mapping[$recordType->getTable()][$existingRecord[$recordType->getIdentifierField(
                 )]] = $existingRecord['uid'];
@@ -244,12 +258,13 @@ class DeployCommand extends Command
             }
 
             $settings[$recordType->getIdentifierField()] = $identifier;
-            $settings['tstamp'] = time();
+            $settings['tstamp']                          = time();
 
             switch ($recordType) {
                 case RecordType::BackendGroup:
                 case RecordType::FrontendGroup:
                     $this->prepareSubgroups($identifier, $settings, $subgroupReferences);
+
                     break;
                 case RecordType::BackendUser:
                 case RecordType::FrontendUser:
@@ -258,6 +273,7 @@ class DeployCommand extends Command
                         $recordType->getGroupTable(),
                         $settings
                     );
+
                     break;
                 default:
             }
@@ -298,9 +314,7 @@ class DeployCommand extends Command
                         RecordType::FileMount,
                         RecordType::FrontendGroup,
                     ], true)) {
-                        $this->mapping[$recordType->getTable()][$identifier] = $connection->lastInsertId(
-                            $recordType->getTable()
-                        );
+                        $this->mapping[$recordType->getTable()][$identifier] = $connection->lastInsertId();
                     }
                 }
 
@@ -339,6 +353,11 @@ class DeployCommand extends Command
         }
     }
 
+    /**
+     * @param array<string, mixed> $configuration
+     *
+     * @return array<int|string, mixed>
+     */
     private function extractValue(array &$configuration, string $key): array
     {
         if (isset($configuration[$key])) {
@@ -353,13 +372,16 @@ class DeployCommand extends Command
     }
 
     /**
+     * @param string[] $identifiers
+     *
+     * @return array<int, array<string, mixed>>
      * @throws Exception
      */
     private function getExistingRecords(array $identifiers): array
     {
         $identifierField = $this->currentRecordType->getIdentifierField();
-        $table = $this->currentRecordType->getTable();
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+        $table           = $this->currentRecordType->getTable();
+        $queryBuilder    = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()
             ->removeAll();
@@ -378,22 +400,28 @@ class DeployCommand extends Command
     }
 
     /**
+     * @param array<string, mixed> $configuration
+     *
+     * @return array<string, mixed>
      * @throws JsonException
      */
     private function importConfigurationFiles(array $configuration): array
     {
-        $additionalConfigurations = [];
-
         foreach ($configuration['files'] as $fileName) {
-            $additionalConfigurations[] = $this->decodeConfigurationFile(GeneralUtility::getFileAbsFileName($fileName));
+            $additionalConfiguration = $this->decodeConfigurationFile(GeneralUtility::getFileAbsFileName($fileName));
+
+            foreach ($additionalConfiguration as $tableName => $records) {
+                $configuration[$tableName] = array_merge($configuration[$tableName] ?? [], $records);
+            }
         }
 
-        return array_merge(
-            $configuration,
-            ...$additionalConfigurations
-        );
+        return $configuration;
     }
 
+    /**
+     * @param array<string, mixed> $settings
+     * @param array<string, mixed> $subgroupReferences
+     */
     private function prepareSubgroups(string $identifier, array &$settings, array &$subgroupReferences): void
     {
         $groupField = $this->currentRecordType->getGroupField();
@@ -404,6 +432,10 @@ class DeployCommand extends Command
         }
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $existingRecords
+     * @param array<string, mixed>             $subgroupReferences
+     */
     private function processBackendSubgroups(array $existingRecords, array $subgroupReferences): void
     {
         $table = $this->currentRecordType->getTable();
@@ -422,13 +454,17 @@ class DeployCommand extends Command
                 ->getConnectionForTable($table);
             $connection->update(
                 $table,
-                [$this->currentRecordType->getGroupField() => implode(',', $subgroupReference)],
+                [$this->currentRecordType->getGroupField()      => implode(',', $subgroupReference)],
                 [$this->currentRecordType->getIdentifierField() => $identifier]
             );
         }
     }
 
     // This converts the identifiers to their respective UIDs.
+
+    /**
+     * @param array<string, mixed> $settings
+     */
     private function processRelations(string $relationField, string $relationTable, array &$settings): void
     {
         if (isset($settings[$relationField]) && is_array($settings[$relationField])) {
@@ -444,7 +480,7 @@ class DeployCommand extends Command
 
     private function softDeleteAbandonedRecords(string ...$existingIdentifiers): int
     {
-        $table = $this->currentRecordType->getTable();
+        $table        = $this->currentRecordType->getTable();
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()

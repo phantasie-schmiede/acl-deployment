@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /*
@@ -23,6 +24,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Throwable;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 use function array_key_exists;
 use function count;
 use function in_array;
@@ -35,7 +37,7 @@ use function in_array;
 #[AsCommand(name: 'aclDeployment:export', description: 'This command exports file mounts, users and user groups into a JSON file which can be used as basis for further additions and optimizations.')]
 class ExportCommand extends Command
 {
-    private const array DEFAULT_VALUES  = [
+    private const array DEFAULT_VALUES = [
         'be_groups'      => [
             'allowed_languages'   => '',
             'availableWidgets'    => null,
@@ -132,6 +134,7 @@ class ExportCommand extends Command
         'uc',
         'uid',
     ];
+
     protected SymfonyStyle $io;
 
     protected function configure(): void
@@ -145,9 +148,9 @@ class ExportCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $configuration = [];
-        $mapping = [];
-        $this->io = new SymfonyStyle($input, $output);
-        $fileName = $input->getArgument('file');
+        $mapping       = [];
+        $this->io      = new SymfonyStyle($input, $output);
+        $fileName      = $input->getArgument('file');
 
         $this->io->writeln('Exporting file mounts, users and user groups to ' . $fileName . '.');
 
@@ -173,12 +176,14 @@ class ExportCommand extends Command
     /**
      * Adds the information which page is accessible by which backend group to the configuration.
      *
+     * @param array<string, mixed> $configuration
+     *
      * @throws Exception
      */
     private function exportPageTreeAccess(array &$configuration): void
     {
         $backendGroupTable = RecordType::BackendGroup->getTable();
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+        $queryBuilder      = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('pages');
         $queryBuilder->getRestrictions()
             ->removeAll();
@@ -205,7 +210,9 @@ class ExportCommand extends Command
         }
 
         foreach ($records as $record) {
-            if (0 === $groupMap[$record['pid']] || $groupMap[$record['pid']] !== $groupMap[$record['uid']]) {
+            $parentGroupTitle = $groupMap[$record['pid']] ?? null;
+
+            if (null === $parentGroupTitle || $parentGroupTitle !== $groupMap[$record['uid']]) {
                 $configuration[RecordType::BackendGroup->getTable(
                 )][$record['title']][PermissionService::PERMISSION_KEY][] = $record['uid'];
             }
@@ -213,13 +220,17 @@ class ExportCommand extends Command
     }
 
     /**
+     * @param array<string, mixed>                     $configuration
+     * @param array<string, array<int|string, string>> $mapping
+     * @param-out array<string, array<mixed>>          $mapping
+     *
      * @throws Exception
      */
     private function exportToConfiguration(array &$configuration, array &$mapping, RecordType $recordType): void
     {
-        $table = $recordType->getTable();
+        $table                             = $recordType->getTable();
         $configuration[$table]['_default'] = self::DEFAULT_VALUES[$table];
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+        $queryBuilder                      = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()
             ->removeAll();
@@ -245,7 +256,7 @@ class ExportCommand extends Command
 
         foreach ($records as $record) {
             $identifierField = $recordType->getIdentifierField();
-            $identifier = $record[$identifierField];
+            $identifier      = $record[$identifierField];
             unset($record[$identifierField]);
             $configuration[$table][$identifier] = [];
 
@@ -266,7 +277,7 @@ class ExportCommand extends Command
 
             foreach ($record as $field => $value) {
                 $defaultValueExists = array_key_exists($field, $configuration[$table]['_default'] ?? []);
-                $defaultValue = $configuration[$table]['_default'][$field] ?? null;
+                $defaultValue       = $configuration[$table]['_default'][$field] ?? null;
 
                 /*
                  * Add field to configuration if it is not the default value and not in the excluded fields.
@@ -293,16 +304,22 @@ class ExportCommand extends Command
     }
 
     /**
+     * @param array<string, mixed> $configuration
+     *
      * @throws JsonException
      */
     private function exportToFile(array $configuration, string $fileName): void
     {
         ksort($configuration, SORT_NATURAL | SORT_FLAG_CASE);
-        $file = GeneralUtility::getFileAbsFileName($fileName);
+        $file        = GeneralUtility::getFileAbsFileName($fileName);
         $fileContent = json_encode($configuration, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
         GeneralUtility::writeFile($file, $fileContent);
     }
 
+    /**
+     * @param array<int|string, string> $tableMapping
+     * @param array<string, mixed>      $record
+     */
     private function replaceRelationIdentifier(array $tableMapping, array &$record, string $relationField): void
     {
         if (empty($record[$relationField])) {

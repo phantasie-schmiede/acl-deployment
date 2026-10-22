@@ -1,0 +1,70 @@
+{
+    "sys_filemounts": {
+        "_default": {
+            "pid": 1
+        },
+        "Media mount": {
+            "description": "Test file mount"
+        }
+    },
+    "be_groups": {
+        "_default": {
+            "pid": 1
+        },
+        "_variables": {
+            "@tables": "pages,tt_content"
+        },
+        "Editors": {
+            "tables_modify": "@tables",
+            "subgroup": [
+                "Basic editors"
+            ]
+        },
+        "Basic editors": {
+            "tables_select": "@tables",
+            "_pageTreeAccess": 2
+        },
+        "News access": {
+            "_pageTreeAccess": "4"
+        }
+    },
+    "be_users": {
+        "_default": {
+            "pid": 1,
+            "admin": 0
+        },
+        "jadoe": {
+            "realName": "Jane Doe",
+            "usergroup": [
+                "Editors"
+            ]
+        },
+        "jdoe": {
+            "realName": "John Doe",
+            "usergroup": [
+                "Basic editors"
+            ]
+        }
+    },
+    "fe_groups": {
+        "_default": {
+            "pid": 1
+        },
+        "Customers": {
+            "description": "Customer group"
+        }
+    },
+    "fe_users": {
+        "_default": {
+            "pid": 1,
+            "disable": 0
+        },
+        "customer1": {
+            "name": "Customer One",
+            "email": "customer1@example.com",
+            "usergroup": [
+                "Customers"
+            ]
+        }
+    }
+}

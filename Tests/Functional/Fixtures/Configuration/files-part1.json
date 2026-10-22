@@ -1,0 +1,10 @@
+{
+    "be_groups": {
+        "_default": {
+            "pid": 1
+        },
+        "Split group one": {
+            "description": "from file one"
+        }
+    }
+}
