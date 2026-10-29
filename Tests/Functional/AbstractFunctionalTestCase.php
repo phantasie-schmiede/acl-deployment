@@ -13,13 +13,11 @@ namespace PSBits\AclDeployment\Tests\Functional;
 
 use PSBits\AclDeployment\Data\ExtensionInformation;
 use PSBits\AclDeployment\Service\PermissionService;
-use TYPO3\CMS\Core\Core\Environment;
+use PSBits\Qa\Testing\Support\SiteBasedTestTrait;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\TypoScript\TypoScriptService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
-
-use function file_put_contents;
 
 /**
  * Class AbstractFunctionalTestCase
@@ -32,6 +30,8 @@ use function file_put_contents;
  */
 abstract class AbstractFunctionalTestCase extends FunctionalTestCase
 {
+    use SiteBasedTestTrait;
+
     public const int ROOT_PAGE_ID = 1;
 
     protected array $testExtensionsToLoad = [
@@ -42,7 +42,7 @@ abstract class AbstractFunctionalTestCase extends FunctionalTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->writeSiteConfiguration();
+        $this->writeSiteConfiguration('acl-deployment-test', $this->buildSiteConfiguration(1, '/'));
         $this->importCSVDataSet(__DIR__ . '/Fixtures/pages.csv');
     }
 
@@ -54,13 +54,5 @@ abstract class AbstractFunctionalTestCase extends FunctionalTestCase
             GeneralUtility::makeInstance(SiteFinder::class),
             GeneralUtility::makeInstance(TypoScriptService::class),
         );
-    }
-
-    private function writeSiteConfiguration(): void
-    {
-        $path = Environment::getConfigPath() . '/sites/acl-deployment-test';
-        GeneralUtility::rmdir($path, true);
-        GeneralUtility::mkdir_deep($path);
-        file_put_contents($path . '/config.yaml', "rootPageId: 1\nbase: '/'\n");
     }
 }
